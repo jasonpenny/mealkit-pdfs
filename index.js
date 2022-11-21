@@ -1,47 +1,41 @@
 require('dotenv').config();
-const puppeteer = require('puppeteer');
+const express = require("express");
+const fs = require("fs");
+const menu = require("./menu");
 
-(async () => {
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
+const app = express();
+const port = process.env.PORT || 3000;
 
-  const mealUrls = [];
-  page.on('response', async (response) => {
-    const url = response.url();
-    if (url.includes('/recipes/') && !url.includes('.jpeg')) {
-      try {
-        const data = await response.json();
-        //console.log(data);
-        mealUrls.push({
-          name: data['name_with_subtitle'],
-          card_url: data['recipe_card_url']
-        });
-      } catch(error) {
-      }
-    }
-  });
+app.get("/", (req, res) => {
+  const text = fs.readFileSync("./menu.json", { encoding: "utf8", flag: "r" });
+  const data = JSON.parse(text);
 
-  await page.goto('https://dinnerly.com/login');
+  res.setHeader("content-type", "text/html; charset=utf-8");
 
-  await page.type('#login_email', process.env.USERNAME);
-  await page.type('#password', process.env.PASSWORD);
-  await page.click('#submit');
-
-  const mealsSelector = '.at-home .current-recipe__cooking-instructions';
-  await page.waitForSelector(mealsSelector);
-
-  // the navigation means we can't reuse the list of objects from page.$$()
-  for (let i = 0; i < 3; ++i) {
-    const meals = await page.$$(mealsSelector);
-    //console.log(`clicking meal ${i}`);
-    await meals[i].click();
-    await page.waitForTimeout(3000);
-
-    await page.goBack();
-    await page.waitForTimeout(1000);
+  res.write("<html>");
+  res.write("<head><style>ul li { padding: 5px }</style>");
+  res.write("<ul>");
+  for (var i = 0; i < data.length; ++i) {
+    res.write("<li>");
+    res.write(`<a href="${data[i].card_url}">${data[i].name}</a>\n`);
+    res.write("</li>");
   }
+  res.write("</ul>");
 
-  await browser.close();
+  res.write('<a href="/refresh">Refresh menu</a>');
+  res.end();
+});
 
-  console.log(mealUrls);
-})();
+app.get("/refresh", async (req, res) => {
+  const menuItems = await menu.getNewMenuItems();
+  let text = JSON.stringify(menuItems);
+
+  fs.unlinkSync("./menu.json");
+  fs.writeFileSync("./menu.json", text);
+
+  res.redirect("/");
+});
+
+app.listen(port, () => {
+  console.log(`Listening on port ${port}`);
+});
