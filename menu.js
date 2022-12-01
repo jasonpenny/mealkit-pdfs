@@ -23,7 +23,7 @@ const getNewMenuItems = async () => {
 
   await page.type('#login_email', process.env.USERNAME);
   await page.type('#password', process.env.PASSWORD);
-  await page.click('#submit');
+  await page.click('#login_form button[type=submit]');
 
   const mealsSelector = '#current_orders .in-progress .current-recipe__cooking-instructions';
   await page.waitForSelector(mealsSelector);
