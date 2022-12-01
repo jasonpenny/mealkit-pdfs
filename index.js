@@ -6,6 +6,10 @@ const menu = require("./menu");
 const app = express();
 const port = process.env.PORT || 3000;
 
+process.on('SIGINT', function() {
+    process.exit();
+});
+
 app.get("/", (req, res) => {
   const text = fs.readFileSync("./menu.json", { encoding: "utf8", flag: "r" });
   const data = JSON.parse(text);
