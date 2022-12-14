@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require("express");
 const fs = require("fs");
-const menu = require("./menu");
+const api = require("./mealkitApi");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -10,29 +10,55 @@ process.on('SIGINT', function() {
     process.exit();
 });
 
-app.get("/", (req, res) => {
+const getRecipes = () => {
   const text = fs.readFileSync("./menu.json", { encoding: "utf8", flag: "r" });
-  const data = JSON.parse(text);
+  const resp = JSON.parse(text);
 
+  return resp.data.customer.orders[0].contents.uncookedRecipes;
+};
+
+app.get("/", (req, res) => {
   res.setHeader("content-type", "text/html; charset=utf-8");
 
   res.write("<html>");
   res.write("<head><style>ul li { padding: 5px }</style>");
-  res.write("<ul>");
-  for (var i = 0; i < data.length; ++i) {
-    res.write("<li>");
-    res.write(`<a href="${data[i].card_url}">${data[i].name}</a>\n`);
-    res.write("</li>");
+  res.write("<table>");
+  res.write("<tr>");
+
+  const recipes = getRecipes();
+  for (var i = 0; i < recipes.length; ++i) {
+    res.write("<td>");
+    res.write(`<a href="/recipe/${i}">`);
+    res.write(`<img src="${recipes[i].image.url}" width=200 />`);
+    res.write(` <h1>${recipes[i].title}</h1>`);
+    res.write(` <h2>${recipes[i].subtitle}</h2>`);
+    res.write("</a>");
+    res.write("</td>");
   }
-  res.write("</ul>");
+  res.write("</tr>");
+  res.write("</table>");
 
   res.write('<a href="/refresh">Refresh menu</a>');
   res.end();
 });
 
+app.get('/recipe/:num', async (req, res) => {
+  const recipes = getRecipes();
+  const recipe = recipes[req.params.num];
+
+  res.write('<a href="/">Back</a>');
+
+  res.write('<pre>');
+  res.write(JSON.stringify(recipe, null, 2));
+  res.write('</pre>');
+
+  res.write('<a href="/">Back</a>');
+  res.end();
+});
+
 app.get("/refresh", async (req, res) => {
-  const menuItems = await menu.getNewMenuItems();
-  let text = JSON.stringify(menuItems);
+  const data = await api.getCurrentOrder(process.env.USERNAME, process.env.PASSWORD);
+  let text = JSON.stringify(data);
 
   fs.unlinkSync("./menu.json");
   fs.writeFileSync("./menu.json", text);
@@ -41,5 +67,6 @@ app.get("/refresh", async (req, res) => {
 });
 
 app.listen(port, () => {
+  console.log(`Configured as ${process.env.USERNAME}`);
   console.log(`Listening on port ${port}`);
 });
