@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= recipe.title %></title>
+    <style>
+    body {
+      margin: auto;
+      width: 50%;
+      padding: 10px;
+    }
+    .ingredients-container {
+      display: flex;
+      flex-wrap: wrap;
+    }
+    .ingredient {
+      width:100px;
+      margin: 4px;
+    }
+    </style>
+  </head>
+  <body>
+    <a href="/">Back</a>
+
+    <h1><%= recipe.title %></h1>
+    <h2><%= recipe.subtitle %></h2>
+    <img src="<%= recipe.image.url %>" width=400 />
+    <h4><%= recipe.duration.from %> - <%= recipe.duration.to %> <%= recipe.duration.unit %></h5>
+
+    <h3>Ingredients</h3>
+    <div class="ingredients-container">
+    <% recipe.shippedIngredients.forEach(function (ingredient) { %>
+      <div class="ingredient">
+        <img src="<%= ingredient.image.url %>" width=100 />
+        <br/>
+        <%= ingredient.nameWithQuantity %>
+      </div>
+    <% }); %>
+    </div>
+
+    <h3>What you'll need</h3>
+    <ul>
+      <% recipe.assumedIngredients.forEach(function (ingredient) { %>
+        <li><%= ingredient.name %></li>
+      <% }); %>
+    </ul>
+
+    <h3>What you'll use</h3>
+    <ul>
+      <% recipe.utensils.forEach(function (ingredient) { %>
+        <li><%= ingredient.name %></li>
+      <% }); %>
+    </ul>
+
+    <h2>Cooking steps</h2>
+    <% function boldIngredients(s) {
+         var result = "";
+         var tagOn = false;
+         var i = 0;
+         while (i < s.length + 1) {
+           if (s[i] == '_' && s[i+1] == '_') {
+             tagOn = !tagOn;
+             result += tagOn ? "<b>" : "</b>";
+
+             i += 1;
+           } else {
+             result += s[i];
+           }
+
+           i += 1;
+         }
+
+         return result;
+       } %>
+    <% recipe.steps.forEach(function (step) { %>
+      <img src="<%= step.image.url %>" width="50%" />
+      <h4><%= step.title %></h4>
+
+      <p><%- boldIngredients(step.description) %></p>
+    <% }); %>
+
+    <a href="/">Back</a>
+  </body>
+</html>

@@ -1,9 +1,13 @@
 require('dotenv').config();
 const express = require("express");
+const path = require('path');
 const fs = require("fs");
 const api = require("./mealkitApi");
 
 const app = express();
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'ejs');
+
 const port = process.env.PORT || 3000;
 
 process.on('SIGINT', function() {
@@ -21,7 +25,6 @@ app.get("/", (req, res) => {
   res.setHeader("content-type", "text/html; charset=utf-8");
 
   res.write("<html>");
-  res.write("<head><style>ul li { padding: 5px }</style>");
   res.write("<table>");
   res.write("<tr>");
 
@@ -32,6 +35,7 @@ app.get("/", (req, res) => {
     res.write(`<img src="${recipes[i].image.url}" width=200 />`);
     res.write(` <h1>${recipes[i].title}</h1>`);
     res.write(` <h2>${recipes[i].subtitle}</h2>`);
+    res.write(` <h5>${recipes[i].duration.from} - ${recipes[i].duration.to} ${recipes[i].duration.unit}</h5>`);
     res.write("</a>");
     res.write("</td>");
   }
@@ -44,16 +48,8 @@ app.get("/", (req, res) => {
 
 app.get('/recipe/:num', async (req, res) => {
   const recipes = getRecipes();
-  const recipe = recipes[req.params.num];
 
-  res.write('<a href="/">Back</a>');
-
-  res.write('<pre>');
-  res.write(JSON.stringify(recipe, null, 2));
-  res.write('</pre>');
-
-  res.write('<a href="/">Back</a>');
-  res.end();
+  res.render('recipe', { recipe: recipes[req.params.num] });
 });
 
 app.get("/refresh", async (req, res) => {
