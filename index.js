@@ -18,6 +18,9 @@ const getRecipes = () => {
   const text = fs.readFileSync("./menu.json", { encoding: "utf8", flag: "r" });
   const resp = JSON.parse(text);
 
+  if (!('data' in resp)) {
+    return [];
+  }
   return resp.data.customer.orders[0].contents.uncookedRecipes;
 };
 
