@@ -56,7 +56,7 @@
          var result = "";
          var tagOn = false;
          var i = 0;
-         while (i < s.length + 1) {
+         while (i < (s.length - 1)) {
            if (s[i] == '_' && s[i+1] == '_') {
              tagOn = !tagOn;
              result += tagOn ? "<b>" : "</b>";
